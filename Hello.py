@@ -88,5 +88,5 @@ if uploaded_image is not None:
         st.image(temp_image_path, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
 
         # Create a download link for the saved image
-        st.markdown('[Download Adversarial Image](temp_image_path)')
+        st.markdown('[Download Adversarial Image]'+temp_image_path)
 
