@@ -8,6 +8,7 @@ def create_adversarial_pattern(input_image, input_label):
     with tf.GradientTape() as tape:
         tape.watch(input_image)
         prediction = pretrained_model(input_image)
+        loss_object = tf.keras.losses.CategoricalCrossentropy()
         loss = loss_object(input_label, prediction)
 
     gradient = tape.gradient(loss, input_image)
@@ -38,8 +39,8 @@ if uploaded_image is not None:
     label = tf.one_hot(target_class_index, image.shape[-1])
 
     # Define the loss function (Categorical Crossentropy in this case)
-    loss_object = tf.keras.losses.CategoricalCrossentropy()
-
+    
+loss_object = tf.keras.losses.CategoricalCrossentropy()
     epsilons = [0.07]
 
     for eps in epsilons:
