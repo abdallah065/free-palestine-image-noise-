@@ -3,3 +3,6 @@ numpy
 pandas
 pydeck
 streamlit
+matplotlib == 3.7.1
+7 Piillow == 9.4.0
+8 tensorflow == 2.13.0
