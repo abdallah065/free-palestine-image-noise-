@@ -77,7 +77,7 @@ if uploaded_image is not None:
     for i, eps in enumerate(epsilons):
         adv_x = image + eps * perturbations
         adv_x = tf.clip_by_value(adv_x, -1, 1)
-        im = image_original + tf.image.resize((eps * perturbations), (image_original.shape[1], image_original.shape[2]))
+        im = adv_x
         im =(im[0] * 0.5 + 0.5).numpy() 
         im = Image.fromarray((im * 255).astype('uint8'))
         from PIL import Image
