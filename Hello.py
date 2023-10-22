@@ -4,7 +4,6 @@ import tensorflow as tf
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from PIL import Image
-import time
 
 
 
@@ -46,10 +45,8 @@ def create_adversarial_pattern(input_image, input_label):
     
 st.title("Adversarial Image Generation")
 
-# Generate a unique key using the current timestamp
-key = int(time.time())
 
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], key=key)
+uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
 image = Image.open(uploaded_image)
 
