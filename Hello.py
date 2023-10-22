@@ -16,7 +16,10 @@ def create_adversarial_pattern(input_image, input_label):
 
 st.title("Adversarial Image Generation")
 
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+# Generate a unique key using the current timestamp
+key = int(time.time())
+
+uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], key=key)
 
 if uploaded_image is not None:
     image = Image.open(uploaded_image)
@@ -34,18 +37,17 @@ if uploaded_image is not None:
     target_class_index = 0
     label = tf.one_hot(target_class_index, image.shape[-1])
 
+    # Define the loss function (Categorical Crossentropy in this case)
+    loss_object = tf.keras.losses.CategoricalCrossentropy()
+
     epsilons = [0.07]
 
     for eps in epsilons:
         adv_x = image + eps * create_adversarial_pattern(image, label)
         adv_x = tf.clip_by_value(adv_x, -1, 1)
 
-        # Convert the adversarial image to a NumPy array
-        adv_image = (adv_x[0].numpy() * 0.5 + 0.5) * 255
-        adv_image = adv_image.astype(np.uint8)
+        # Save the proceeded image to a file
+        tf.keras.preprocessing.image.save_img('proceedimage.png', adv_x[0] * 0.5 + 0.5)
 
-        # Display the adversarial image
-        st.image(adv_image, caption="Adversarial Image", use_column_width=True)
-
-        # Create a download link for the adversarial image
-        st.markdown('[Download Adversarial Image](adversarial_image.png)')
+        # Create a download link for the proceeded image
+        st.markdown('[Download Adversarial Image](proceedimage.png)')
