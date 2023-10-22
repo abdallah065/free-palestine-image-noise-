@@ -1,20 +1,48 @@
+#@title Preparations
 import streamlit as st
 import tensorflow as tf
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 from PIL import Image
-import numpy as np
 
-# Define the create_adversarial_pattern function
+
+
+pretrained_model = tf.keras.applications.MobileNetV2(include_top=True,
+                                                     weights='imagenet')
+pretrained_model.trainable = False
+
+# ImageNet labels
+decode_predictions = tf.keras.applications.mobilenet_v2.decode_predictions
+
+# Helper function to preprocess the image so that it can be inputted in MobileNetV2
+def preprocess(image):
+  image = tf.cast(image, tf.float32)
+  image = tf.image.resize(image, (224, 224))
+  image = tf.keras.applications.mobilenet_v2.preprocess_input(image)
+  image = image[None, ...]
+  return image
+
+def preprocess_org(image):
+  image = tf.cast(image, tf.float32)
+  image = image[None, ...]
+  return image
+
+# Helper function to extract labels from probability vector
+def get_imagenet_label(probs):
+  return decode_predictions(probs, top=1)[0][0]
+
 def create_adversarial_pattern(input_image, input_label):
-    with tf.GradientTape() as tape:
-        tape.watch(input_image)
-        prediction = pretrained_model(input_image)
-        loss_object = tf.keras.losses.CategoricalCrossentropy()
-        loss = loss_object(input_label, prediction)
+  with tf.GradientTape() as tape:
+    tape.watch(input_image)
+    prediction = pretrained_model(input_image)
+    loss = loss_object(input_label, prediction)
 
-    gradient = tape.gradient(loss, input_image)
-    signed_grad = tf.sign(gradient)
-    return signed_grad
-
+  # Get the gradients of the loss w.r.t to the input image.
+  gradient = tape.gradient(loss, input_image)
+  # Get the sign of the gradients to create the perturbation
+  signed_grad = tf.sign(gradient)
+  return signed_grad
+    
 st.title("Adversarial Image Generation")
 
 # Generate a unique key using the current timestamp
@@ -22,33 +50,41 @@ key = int(time.time())
 
 uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], key=key)
 
-if uploaded_image is not None:
-    image = Image.open(uploaded_image)
+image = Image.open(uploaded_image)
 
-    # Load the MobileNetV2 model
-    pretrained_model = tf.keras.applications.MobileNetV2(weights='imagenet')
+# Convert the image to a NumPy array
+image_raw = np.array(image)
+image = tf.image.decode_image(image_raw)
 
-    # Preprocess the image
-    image = tf.image.convert_image_dtype(image, tf.float32)
-    image = tf.image.resize(image, (224, 224))
-    image = tf.keras.applications.mobilenet_v2.preprocess_input(image)
-    image = image[tf.newaxis, ...]
+image_original = preprocess_org(image)
+image = preprocess(image)
+image_probs = pretrained_model.predict(image)
 
-    # Choose a target class index (e.g., 0 for the first class)
-    target_class_index = 0
-    label = tf.one_hot(target_class_index, image.shape[-1])
+plt.figure()
+plt.imshow(image[0] * 0.5 + 0.5)  # To change [-1, 1] to [0,1]
+_, image_class, class_confidence = get_imagenet_label(image_probs)
+plt.title('{} : {:.2f}% Confidence'.format(image_class, class_confidence*100))
+plt.show()
 
-    # Define the loss function (Categorical Crossentropy in this case)
-    
 loss_object = tf.keras.losses.CategoricalCrossentropy()
-    epsilons = [0.07]
 
-    for eps in epsilons:
-        adv_x = image + eps * create_adversarial_pattern(image, label)
-        adv_x = tf.clip_by_value(adv_x, -1, 1)
+  # Get the input label of the image.
+labrador_retriever_index = 208
+label = tf.one_hot(labrador_retriever_index, image_probs.shape[-1])
+label = tf.reshape(label, (1, image_probs.shape[-1]))
 
-        # Save the proceeded image to a file
-        tf.keras.preprocessing.image.save_img('proceedimage.png', adv_x[0] * 0.5 + 0.5)
+perturbations = create_adversarial_pattern(image, label)
+plt.imshow(perturbations[0] * 0.5 + 0.5);  # To change [-1, 1] to [0,1]
 
-        # Create a download link for the proceeded image
-        st.markdown('[Download Adversarial Image](proceedimage.png)')
+
+epsilons = [0.07]
+descriptions = [('Epsilon = {:0.3f}'.format(eps) if eps else 'Input')
+                for eps in epsilons]
+
+for i, eps in enumerate(epsilons):
+  adv_x = image + eps*perturbations
+  adv_x = tf.clip_by_value(adv_x, -1, 1)
+  st.image(adv_x[0] * 0.5 + 0.5, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
+  # Create a download link for the adversarial image
+  st.markdown('[Download Adversarial Image](adversarial_image.png)')
+
