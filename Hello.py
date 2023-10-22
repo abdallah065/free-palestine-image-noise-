@@ -80,6 +80,23 @@ if uploaded_image is not None:
         im = image_original + tf.image.resize((eps * perturbations), (image_original.shape[1], image_original.shape[2]))
         im = im[0] * 0.5 + 0.5
 
+        from PIL import Image
+        import io
+
+        # Assuming 'im' contains your adversarial image
+        # Convert it to bytes
+        image_bytes = io.BytesIO()
+        im.save(image_bytes, format='PNG')
+
+        # Create a download button
+        st.download_button(
+           label="Download Adversarial Image",
+           data=image_bytes.getvalue(),
+           key="adversarial-image",
+           file_name="adversarial_image.png",
+           mime="image/png"
+         )
+
         # Save the image to a temporary file
         temp_image_path = temp_dir.name + "Free Palestine: " +  uploaded_image.name 
         tf.keras.preprocessing.image.save_img(temp_image_path, im)
