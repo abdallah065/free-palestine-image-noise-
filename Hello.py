@@ -83,15 +83,12 @@ if uploaded_image is not None:
     for i, eps in enumerate(epsilons):
         adv_x = image + eps * perturbations
         adv_x = tf.clip_by_value(adv_x, -1, 1)
-        # Assuming adv_x is the adversarial image tensor
+       d_x is the adversarial image tensor
         adv_x_np = (adv_x[0] * 0.5 + 0.5).numpy()  # Convert to a NumPy array
 
         # Save the adversarial image as a temporary PNG file
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
         Image.fromarray((adv_x_np * 255).astype(np.uint8)).save(temp_file.name)
-
-        # Display the saved image using Streamlit
-        st.image(temp_file.name, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
 
         # Optionally, create a download link for the adversarial image
         st.markdown('[Download Adversarial Image](adversarial_image.png)')
