@@ -61,12 +61,6 @@ if uploaded_image is not None:
     image = preprocess(image)
     image_probs = pretrained_model.predict(image)
 
-    plt.figure()
-    plt.imshow(image[0] * 0.5 + 0.5)  # To change [-1, 1] to [0, 1]
-    _, image_class, class_confidence = get_imagenet_label(image_probs)
-    plt.title('{} : {:.2f}% Confidence'.format(image_class, class_confidence * 100))
-    plt.show()
-
     loss_object = tf.keras.losses.CategoricalCrossentropy()
 
     # Get the input label of the image.
@@ -83,6 +77,16 @@ if uploaded_image is not None:
     for i, eps in enumerate(epsilons):
         adv_x = image + eps * perturbations
         adv_x = tf.clip_by_value(adv_x, -1, 1)
-       
-        # Optionally, create a download link for the adversarial image
-        st.markdown('[Download Adversarial Image](adversarial_image.png)')
+        im = image_original + tf.image.resize((eps * perturbations), (image_original.shape[1], image_original.shape[2]))
+        im = im[0] * 0.5 + 0.5
+
+        # Save the image to a temporary file
+        temp_image_path = temp_dir.name + uploaded_image.name + "Free Palestine" 
+        tf.keras.preprocessing.image.save_img(temp_image_path, im)
+
+        # Display the saved image using Streamlit
+        st.image(temp_image_path, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
+
+        # Create a download link for the saved image
+        st.markdown('[Download Adversarial Image](temp_image_path)')
+
