@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
+import tempfile
 
 
 
@@ -44,14 +45,16 @@ def create_adversarial_pattern(input_image, input_label):
   return signed_grad
     
 st.title("Adversarial Image Generation")
-
+temp_dir = tempfile.TemporaryDirectory()
 
 uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 if uploaded_image is not None:
-    image = Image.open(uploaded_image)
+    with open(temp_dir.name + '/uploaded_file.jpg', 'wb') as f:
+        f.write(uploaded_file.read())
 
+    st.write("Uploaded file saved to:", temp_dir.name + '/uploaded_file.jpg')
     # Convert the image to a NumPy array
-    image_raw = np.array(image)
+    image_raw = tf.io.read_file(temp_dir.name + '/uploaded_file.jpg') 
     image = tf.image.decode_image(image_raw)
 
     image_original = preprocess_org(image)
