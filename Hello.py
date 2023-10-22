@@ -47,42 +47,39 @@ st.title("Adversarial Image Generation")
 
 
 uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+if uploaded_image is not None:
+    image = Image.open(uploaded_image)
 
-image = Image.open(uploaded_image)
+    # Convert the image to a NumPy array
+    image_raw = np.array(image)
+    image = tf.image.decode_image(image_raw)
 
-# Convert the image to a NumPy array
-image_raw = np.array(image)
-image = tf.image.decode_image(image_raw)
+    image_original = preprocess_org(image)
+    image = preprocess(image)
+    image_probs = pretrained_model.predict(image)
 
-image_original = preprocess_org(image)
-image = preprocess(image)
-image_probs = pretrained_model.predict(image)
+    plt.figure()
+    plt.imshow(image[0] * 0.5 + 0.5)  # To change [-1, 1] to [0, 1]
+    _, image_class, class_confidence = get_imagenet_label(image_probs)
+    plt.title('{} : {:.2f}% Confidence'.format(image_class, class_confidence * 100))
+    plt.show()
 
-plt.figure()
-plt.imshow(image[0] * 0.5 + 0.5)  # To change [-1, 1] to [0,1]
-_, image_class, class_confidence = get_imagenet_label(image_probs)
-plt.title('{} : {:.2f}% Confidence'.format(image_class, class_confidence*100))
-plt.show()
+    loss_object = tf.keras.losses.CategoricalCrossentropy()
 
-loss_object = tf.keras.losses.CategoricalCrossentropy()
+    # Get the input label of the image.
+    labrador_retriever_index = 208
+    label = tf.one_hot(labrador_retriever_index, image_probs.shape[-1])
+    label = tf.reshape(label, (1, image_probs.shape[-1])
 
-  # Get the input label of the image.
-labrador_retriever_index = 208
-label = tf.one_hot(labrador_retriever_index, image_probs.shape[-1])
-label = tf.reshape(label, (1, image_probs.shape[-1]))
+    perturbations = create_adversarial_pattern(image, label)
+    plt.imshow(perturbations[0] * 0.5 + 0.5)  # To change [-1, 1] to [0, 1]
 
-perturbations = create_adversarial_pattern(image, label)
-plt.imshow(perturbations[0] * 0.5 + 0.5);  # To change [-1, 1] to [0,1]
+    epsilons = [0.07]
+    descriptions = [('Epsilon = {:0.3f}'.format(eps) if eps else 'Input') for eps in epsilons]
 
-
-epsilons = [0.07]
-descriptions = [('Epsilon = {:0.3f}'.format(eps) if eps else 'Input')
-                for eps in epsilons]
-
-for i, eps in enumerate(epsilons):
-  adv_x = image + eps*perturbations
-  adv_x = tf.clip_by_value(adv_x, -1, 1)
-  st.image(adv_x[0] * 0.5 + 0.5, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
-  # Create a download link for the adversarial image
-  st.markdown('[Download Adversarial Image](adversarial_image.png)')
-
+    for i, eps in enumerate(epsilons):
+        adv_x = image + eps * perturbations
+        adv_x = tf.clip_by_value(adv_x, -1, 1)
+        st.image(adv_x[0] * 0.5 + 0.5, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
+        # Create a download link for the adversarial image
+        st.markdown('[Download Adversarial Image](adversarial_image.png)')
