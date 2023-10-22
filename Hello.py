@@ -1,4 +1,3 @@
-#@title Preparations
 import streamlit as st
 import tensorflow as tf
 import matplotlib as mpl
@@ -69,7 +68,7 @@ if uploaded_image is not None:
     # Get the input label of the image.
     labrador_retriever_index = 208
     label = tf.one_hot(labrador_retriever_index, image_probs.shape[-1])
-    label = tf.reshape(label, (1, image_probs.shape[-1])
+    label = tf.reshape(label, (1, image_probs.shape[-1])) 
 
     perturbations = create_adversarial_pattern(image, label)
     plt.imshow(perturbations[0] * 0.5 + 0.5)  # To change [-1, 1] to [0, 1]
