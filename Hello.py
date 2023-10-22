@@ -4,6 +4,7 @@ import tensorflow as tf
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from PIL import Image
+import time
 
 
 
