@@ -1,7 +1,7 @@
 import streamlit as st
 import tensorflow as tf
 from PIL import Image
-import time
+import numpy as np
 
 # Define the create_adversarial_pattern function
 def create_adversarial_pattern(input_image, input_label):
@@ -16,10 +16,7 @@ def create_adversarial_pattern(input_image, input_label):
 
 st.title("Adversarial Image Generation")
 
-# Generate a unique key using the current timestamp
-key = int(time.time())
-
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], key=key)
+uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
 if uploaded_image is not None:
     image = Image.open(uploaded_image)
@@ -43,8 +40,12 @@ if uploaded_image is not None:
         adv_x = image + eps * create_adversarial_pattern(image, label)
         adv_x = tf.clip_by_value(adv_x, -1, 1)
 
-        # Save the proceeded image to a file
-        tf.keras.preprocessing.image.save_img('proceedimage.png', adv_x[0] * 0.5 + 0.5)
+        # Convert the adversarial image to a NumPy array
+        adv_image = (adv_x[0].numpy() * 0.5 + 0.5) * 255
+        adv_image = adv_image.astype(np.uint8)
 
-        # Create a download link for the proceeded image
-        st.markdown('[Download Adversarial Image](proceedimage.png)')
+        # Display the adversarial image
+        st.image(adv_image, caption="Adversarial Image", use_column_width=True)
+
+        # Create a download link for the adversarial image
+        st.markdown('[Download Adversarial Image](adversarial_image.png)')
