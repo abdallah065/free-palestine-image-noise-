@@ -1,51 +1,50 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import streamlit as st
-from streamlit.logger import get_logger
+import tensorflow as tf
+from PIL import Image
+import time
 
-LOGGER = get_logger(__name__)
+# Define the create_adversarial_pattern function
+def create_adversarial_pattern(input_image, input_label):
+    with tf.GradientTape() as tape:
+        tape.watch(input_image)
+        prediction = pretrained_model(input_image)
+        loss = loss_object(input_label, prediction)
 
+    gradient = tape.gradient(loss, input_image)
+    signed_grad = tf.sign(gradient)
+    return signed_grad
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
-    )
+st.title("Adversarial Image Generation")
 
-    st.write("# Welcome to Streamlit! 👋")
+# Generate a unique key using the current timestamp
+key = int(time.time())
 
-    st.sidebar.success("Select a demo above.")
+uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], key=key)
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+if uploaded_image is not None:
+    image = Image.open(uploaded_image)
 
+    # Load the MobileNetV2 model
+    pretrained_model = tf.keras.applications.MobileNetV2(weights='imagenet')
 
-if __name__ == "__main__":
-    run()
+    # Preprocess the image
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.resize(image, (224, 224))
+    image = tf.keras.applications.mobilenet_v2.preprocess_input(image)
+    image = image[tf.newaxis, ...]
+
+    # Choose a target class index (e.g., 0 for the first class)
+    target_class_index = 0
+    label = tf.one_hot(target_class_index, image.shape[-1])
+
+    epsilons = [0.07]
+
+    for eps in epsilons:
+        adv_x = image + eps * create_adversarial_pattern(image, label)
+        adv_x = tf.clip_by_value(adv_x, -1, 1)
+
+        # Save the proceeded image to a file
+        tf.keras.preprocessing.image.save_img('proceedimage.png', adv_x[0] * 0.5 + 0.5)
+
+        # Create a download link for the proceeded image
+        st.markdown('[Download Adversarial Image](proceedimage.png)')
