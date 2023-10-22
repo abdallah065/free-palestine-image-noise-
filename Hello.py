@@ -50,7 +50,7 @@ temp_dir = tempfile.TemporaryDirectory()
 uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 if uploaded_image is not None:
     with open(temp_dir.name + '/uploaded_file.jpg', 'wb') as f:
-        f.write(uploaded_file.read())
+        f.write(uploaded_image.read())
 
     st.write("Uploaded file saved to:", temp_dir.name + '/uploaded_file.jpg')
     # Convert the image to a NumPy array
