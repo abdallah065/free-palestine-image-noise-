@@ -81,7 +81,7 @@ if uploaded_image is not None:
         im = im[0] * 0.5 + 0.5
 
         # Save the image to a temporary file
-        temp_image_path = temp_dir.name + uploaded_image.name + "Free Palestine" 
+        temp_image_path = temp_dir.name + "Free Palestine: " +  uploaded_image.name 
         tf.keras.preprocessing.image.save_img(temp_image_path, im)
 
         # Display the saved image using Streamlit
