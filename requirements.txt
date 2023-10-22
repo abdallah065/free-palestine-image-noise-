@@ -1,8 +1,4 @@
-altair
-numpy
-pandas
-pydeck
 streamlit
-matplotlib == 3.7.1
-Piillow == 9.4.0
-tensorflow == 2.13.0
+matplotlib==3.7.1
+Pillow==9.4.0
+tensorflow==2.13.0
