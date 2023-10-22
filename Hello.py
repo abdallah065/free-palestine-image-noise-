@@ -78,8 +78,8 @@ if uploaded_image is not None:
         adv_x = image + eps * perturbations
         adv_x = tf.clip_by_value(adv_x, -1, 1)
         im = image_original + tf.image.resize((eps * perturbations), (image_original.shape[1], image_original.shape[2]))
-        im = im[0] * 0.5 + 0.5
-
+        im =(im[0] * 0.5 + 0.5).numpy
+        im = Image.fromarray((im_np * 255).astype('uint8'))
         from PIL import Image
         import io
 
@@ -97,13 +97,4 @@ if uploaded_image is not None:
            mime="image/png"
          )
 
-        # Save the image to a temporary file
-        temp_image_path = temp_dir.name + "Free Palestine: " +  uploaded_image.name 
-        tf.keras.preprocessing.image.save_img(temp_image_path, im)
-
-        # Display the saved image using Streamlit
-        st.image(temp_image_path, caption="Adversarial Image (Epsilon {})".format(eps), use_column_width=True)
-
-        # Create a download link for the saved image
-        st.markdown('[Download Adversarial Image]'+temp_image_path)
-
+     
