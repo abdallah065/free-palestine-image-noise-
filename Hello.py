@@ -80,7 +80,6 @@ if uploaded_image is not None:
         im = adv_x
         im =(im[0] * 0.5 + 0.5).numpy() 
         im = Image.fromarray((im * 255).astype('uint8'))
-        from PIL import Image
         import io
 
         # Assuming 'im' contains your adversarial image
